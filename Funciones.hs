@@ -1,23 +1,23 @@
-module Funciones (genRule, filterEj) where
+module Funciones (pretty, genLiterals, freeVars, bestLiteral, genRule, cubre, genValues, filterEj) where
 import Datos
 import Data.List
 
-genRule :: BC -> [String] -> [Ejemplo] -> Rule -> Rule
-genRule dom const ep robj@(R h ls)
-    | length newEn == 0 = robj
-    | otherwise         = genRule dom const ep (R h (nextLiteral:ls))
+genRule :: BC -> [String] -> [Ejemplo] -> [Ejemplo] -> Rule -> Rule
+genRule dom const en ep robj@(R h ls)
+    | length en == 0 = robj
+    | otherwise         = genRule dom const newEn ep (R h (nextLiteral:ls))
     where nextLiteral   = bestLiteral dom const ep en robj $ genLiterals dom $ freeVars robj
           newEn         = filter (cubre dom const (R h (nextLiteral:ls))) en
-          en            = (filter (not . (`elem` ep)) . genValues Val (length $ head ep)) const
 
 genLiterals :: BC -> [Variable] -> [Literal]
 genLiterals bc vas =
     concat $ map (\lit@(L n vs) ->
         map (\lstv ->
             foldr (\(v, nv) acc ->
-                applySust v nv acc) lit $ zip vs lstv)
+                applySust v nv acc) 
+            lit $ zip vs lstv)
         (genValues Var (length vs) newVars))
-    bc
+    $ nubBy (\(L na _) (L nb _) -> na == nb) bc
     where newVars = map show $ posibleVars vas
 
 posibleVars :: [Variable] -> [Variable]
@@ -29,13 +29,17 @@ bestLiteral dom const ejs ejsn r@(R h lts) ls =
     where
         p rd    = fromIntegral $ (length . filter (cubre dom const rd)) ejs
         n rd    = fromIntegral $ (length . filter (cubre dom const rd)) ejsn
-        gain l  = (t l) * ((logBase 2 (p (r' l) / (p (r' l) + n (r' l))))
-                        - (logBase 2 (p r / (p r + n r))))
+        gain l  = (t l) * ((log2 (p (r' l) `sDiv` (p (r' l) + n (r' l))))
+                        - (log2 (p r `sDiv` (p r + n r))))
         r' l    = (R h (l:lts))
         gainval = map gain ls
         t l     = p $ r' l
         index (Just i)  = i
         index _         = 0
+        log2 0  = 0
+        log2 x  = logBase 2 x
+
+sDiv a b | b == 0 = a | otherwise = a / b
 
 filterEj :: BC -> [String] -> Rule -> [Ejemplo] -> [Ejemplo]
 filterEj bc const rule ep = filter (not . cubre bc const rule) ep
@@ -55,8 +59,8 @@ posibleRules const r =
     where vars = freeVars r
 
 genValues :: (String -> Variable) -> Int -> [String] -> [[Variable]]
-genValues fv 1 cs  = map (\a -> (fv a):[]) cs
-genValues fv n cs  = concat [map ((fv x):) (genValues fv (n-1) (delete x cs)) | x <- cs]
+genValues fv 0 cs  = [[]]
+genValues fv n cs  = concat [map ((fv x):) (genValues fv (n-1) cs) | x <- cs]
 
 apply :: Rule -> [(Variable, Variable)] -> Rule
 apply (R hls ls) sust = R (head $ appl [hls] sust) (appl ls sust)
@@ -67,8 +71,13 @@ applySust var val (L n vs) = L n (map (\a -> if a==var then val else a) vs)
 
 freeVars :: Rule -> [Variable]
 freeVars (R h body) =
-    (nub . foldr (\(L _ vs) acc -> acc ++ (filter isVar vs)) []) (h:body)
+    (nub . foldr (\(L _ vs) acc -> (filter isVar vs) ++ acc) []) (h:body)
 
 isVar :: Variable -> Bool
 isVar (Var _)   = True
 isVar _         = False
+
+pretty :: [Rule] -> String
+pretty (r:[]) = show r
+pretty (r:rs) = show r ++ "\n" ++ pretty rs
+
