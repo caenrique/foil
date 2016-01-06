@@ -1,4 +1,4 @@
-module Funciones (pretty, genLiterals, freeVars, bestLiteral, genRule, cubre, genValues, filterEj) where
+module Funciones (genRule, genValues, filterEj) where
 import Datos
 import Data.List
 
