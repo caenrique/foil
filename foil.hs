@@ -2,11 +2,10 @@ import System.Environment
 import Funciones
 import Datos
 import Ctest
-import Debug.Trace
 
 foil :: BC -> [String] -> Literal -> [Ejemplo] -> [Ejemplo] -> [Rule] -> [Rule]
 foil _   _     _   _  [] r = r
-foil dom const obj en ep r = trace ("\nrules: " ++ show r) $ foil dom const obj en newEp (r ++ [newRule])
+foil dom const obj en ep r = foil dom const obj en newEp (r ++ [newRule])
     where newRule   = genRule dom const en ep (R obj [])
           newEp     = filterEj dom const newRule ep
 

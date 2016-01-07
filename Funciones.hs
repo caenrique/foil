@@ -1,6 +1,5 @@
 module Funciones (pretty, genLiterals, freeVars, bestLiteral, genRule, cubre, genVal, filterEj) where
 import Datos
-import Debug.Trace
 import Data.List
 
 genRule :: BC -> [String] -> [Ejemplo] -> [Ejemplo] -> Rule -> Rule
@@ -26,7 +25,7 @@ posibleVars vs = vs ++ map (Var . ('Z':) . show) [0..length vs - 2]
 
 bestLiteral :: BC -> [String] -> [Ejemplo] -> [Ejemplo] -> Rule -> [Literal] -> Literal
 bestLiteral dom const ejs ejsn r@(R h lts) ls =
-    trace ("lista: " ++ show ls ++ "\ngainval: " ++ show gainval) $ ls !! (index $ elemIndex (maximum gainval) gainval)
+    ls !! (index $ elemIndex (maximum gainval) gainval)
     where
         p rd    = fromIntegral $ (length . filter (cubre dom const rd)) ejs
         n rd    = fromIntegral $ (length . filter (cubre dom const rd)) ejsn
