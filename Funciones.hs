@@ -1,12 +1,13 @@
-module Funciones (genRule, genValues, filterEj) where
+module Funciones (pretty, genLiterals, freeVars, bestLiteral, genRule, cubre, genVal, filterEj) where
 import Datos
+import Debug.Trace
 import Data.List
 
 genRule :: BC -> [String] -> [Ejemplo] -> [Ejemplo] -> Rule -> Rule
 genRule dom const en ep robj@(R h ls)
     | length en == 0 = robj
-    | otherwise         = genRule dom const newEn ep (R h (nextLiteral:ls))
-    where nextLiteral   = bestLiteral dom const ep en robj $ genLiterals dom $ freeVars robj
+    | otherwise         = genRule dom const newEn ep (R h (ls ++ [nextLiteral]))
+    where nextLiteral   = bestLiteral dom const ep en robj $ genLiterals dom $ freeVars (R h [])
           newEn         = filter (cubre dom const (R h (nextLiteral:ls))) en
 
 genLiterals :: BC -> [Variable] -> [Literal]
@@ -16,16 +17,16 @@ genLiterals bc vas =
             foldr (\(v, nv) acc ->
                 applySust v nv acc) 
             lit $ zip vs lstv)
-        (genValues Var (length vs) newVars))
+        (genVar (length vs) newVars))
     $ nubBy (\(L na _) (L nb _) -> na == nb) bc
     where newVars = map show $ posibleVars vas
 
 posibleVars :: [Variable] -> [Variable]
-posibleVars vs = vs ++ map (Var . ('z':) . show) [0..length vs - 2]
+posibleVars vs = vs ++ map (Var . ('Z':) . show) [0..length vs - 2]
 
 bestLiteral :: BC -> [String] -> [Ejemplo] -> [Ejemplo] -> Rule -> [Literal] -> Literal
 bestLiteral dom const ejs ejsn r@(R h lts) ls =
-    ls !! (index $ elemIndex (maximum gainval) gainval)
+    trace ("lista: " ++ show ls ++ "\ngainval: " ++ show gainval) $ ls !! (index $ elemIndex (maximum gainval) gainval)
     where
         p rd    = fromIntegral $ (length . filter (cubre dom const rd)) ejs
         n rd    = fromIntegral $ (length . filter (cubre dom const rd)) ejsn
@@ -55,12 +56,16 @@ evalRule bc (R _ t) = (and . map (`elem` bc)) t
 
 posibleRules :: [String] -> Rule -> [Rule]
 posibleRules const r =
-    map (\a -> apply r $ zip vars a) $ genValues Val (length vars) const
+    map (\a -> apply r $ zip vars a) $ genVal (length vars) const
     where vars = freeVars r
 
-genValues :: (String -> Variable) -> Int -> [String] -> [[Variable]]
-genValues fv 0 cs  = [[]]
-genValues fv n cs  = concat [map ((fv x):) (genValues fv (n-1) cs) | x <- cs]
+genVal :: Int -> [String] -> [[Variable]]
+genVal 0 _ = [[]]
+genVal n cs  = concat [map ((Val x):) (genVal (n-1) $ delete x cs) | x <- cs]
+
+genVar :: Int -> [String] -> [[Variable]]
+genVar 0 _ = [[]]
+genVar n cs  = concat [map ((Var x):) (genVar (n-1) $ delete x cs) | x <- cs]
 
 apply :: Rule -> [(Variable, Variable)] -> Rule
 apply (R hls ls) sust = R (head $ appl [hls] sust) (appl ls sust)
