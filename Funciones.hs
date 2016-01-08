@@ -1,4 +1,4 @@
-module Funciones (pretty, genLiterals, freeVars, bestLiteral, genRule, cubre, genVal, filterEj) where
+module Funciones where
 import Datos
 import Data.List
 
@@ -24,7 +24,7 @@ posibleVars :: [Variable] -> [Variable]
 posibleVars vs = vs ++ map (Var . ('Z':) . show) [0..length vs - 2]
 
 bestLiteral :: BC -> [String] -> [Ejemplo] -> [Ejemplo] -> Rule -> [Literal] -> Literal
-bestLiteral dom const ejs ejsn r@(R h lts) ls =
+bestLiteral dom const ejs ejsn r@(R h lts) (l:ls) =
     ls !! (index $ elemIndex (maximum gainval) gainval)
     where
         p rd    = fromIntegral $ (length . filter (cubre dom const rd)) ejs
@@ -85,3 +85,15 @@ pretty :: [Rule] -> String
 pretty (r:[]) = show r
 pretty (r:rs) = show r ++ "\n" ++ pretty rs
 
+getName :: Literal -> String
+getName (L nombre _) = nombre
+
+getVars :: Literal -> [Variable]
+getVars (L _ vars) = vars
+
+extfromvar :: Variable -> String
+extfromvar (Var x) = x
+extfromvar (Val x) = x
+
+getConstants :: BC -> [String]
+getConstants bc = nub . map extfromvar . concat . map getVars $ bc

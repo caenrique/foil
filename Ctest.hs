@@ -13,7 +13,7 @@ ejs = [
         [Val "victor", Val "sharon"]
       ]
 
---ejN = (filter (not . (`elem` [ej])) . genVal (length $ ej)) constant
+--ejN = (filter (not . (`elem` ejs)) . genVal (length $ head ejs)) constant
 constant = [ "victor", "sharon", "bob", "tom"]
 objetivo = L "nieta" [Var "X", Var "Y"]
 rule = R objetivo []
