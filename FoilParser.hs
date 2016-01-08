@@ -4,26 +4,17 @@ import Text.ParserCombinators.Parsec
 import Control.Applicative (liftA2)
 import Datos
 
-foilFile :: CharParser () [Literal]
+lexema :: Parser a -> Parser a
+lexema p = spaces *> p <* spaces
+
 foilFile = endBy literal (many eol)
-
-literal :: CharParser () Literal
-literal = liftA2 L (name) (char '(' *> sepBy variable (char ',' *> many (char ' ')) <* char ')')
-
-objetivo :: CharParser () Literal
-objetivo = liftA2 L (name) (char '(' *> sepBy var (char ',' *> many (char ' ')) <* char ')')
-
-name :: CharParser () String
-name = many (noneOf ",\n()")
-
-variable :: CharParser () Variable
-variable = Val <$> many (noneOf ",\n()")
-
-var :: CharParser () Variable
-var = Var <$> many (noneOf ",\n()")
-
-eol :: CharParser () Char
+objetivo = liftA2 L (name) (char '(' *> sepBy var (separator) <* char ')' <* spaces)
+literal = liftA2 L (name) (char '(' *> sepBy variable (separator) <* char ')' <* spaces)
+name = lexema $ many (noneOf ",\n() ") <* spaces
+variable = lexema $ Val <$> many (noneOf ",\n() ")
+var = lexema $ Var <$> many (noneOf ",\n() ")
 eol = char '\n'
+separator = lexema $ char ','
 
 parseFoil :: String -> Either ParseError [Literal]
 parseFoil input = parse foilFile "(unknown)" input
