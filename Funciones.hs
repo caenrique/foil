@@ -27,8 +27,8 @@ bestLiteral :: BC -> [String] -> [Ejemplo] -> [Ejemplo] -> Rule -> [Literal] -> 
 bestLiteral dom const ejs ejsn r@(R h lts) ls =
     ls !! (index $ elemIndex (maximum gainval) gainval)
     where
-        p rd    = fromIntegral $ (length . filter (cubre dom const rd)) ejs
-        n rd    = fromIntegral $ (length . filter (cubre dom const rd)) ejsn
+        p rd    = fromIntegral $ length . filter (cubre dom const rd) $ ejs
+        n rd    = fromIntegral $ length . filter (cubre dom const rd) $ ejsn
         gain l  = (t l) * ((log2 (p (r' l) `sDiv` (p (r' l) + n (r' l))))
                         - (log2 (p r `sDiv` (p r + n r))))
         r' l    = (R h (l:lts))
@@ -45,13 +45,13 @@ filterEj :: BC -> [String] -> Rule -> [Ejemplo] -> [Ejemplo]
 filterEj bc const rule ep = filter (not . cubre bc const rule) ep
 
 cubre :: BC -> [String] -> Rule -> Ejemplo -> Bool
-cubre bc const r ej = (or . map (evalRule bc)) (buildRule r const ej)
+cubre bc const r ej = or . map (evalRule bc) $ buildRule r const ej
 
 buildRule :: Rule -> [String] -> Ejemplo -> [Rule]
-buildRule r const ej = (posibleRules const . apply r . zip (freeVars r)) ej
+buildRule r const ej = posibleRules const . apply r . zip (freeVars r) $ ej
 
 evalRule :: BC -> Rule -> Bool
-evalRule bc (R _ t) = (and . map (`elem` bc)) t
+evalRule bc (R _ t) = and . map (`elem` bc) $ t
 
 posibleRules :: [String] -> Rule -> [Rule]
 posibleRules const r =
@@ -67,15 +67,15 @@ genVar 0 _ = [[]]
 genVar n cs  = concat [map ((Var x):) (genVar (n-1) $ delete x cs) | x <- cs]
 
 apply :: Rule -> [(Variable, Variable)] -> Rule
-apply (R hls ls) sust = R (head $ appl [hls] sust) (appl ls sust)
+apply (R hls ls) sust = R (head $ appl [hls] sust) $ appl ls sust
     where appl vars s = foldr (\(var, val) acc -> map (applySust var val) acc) vars s
 
 applySust :: Variable -> Variable -> Literal -> Literal
-applySust var val (L n vs) = L n (map (\a -> if a==var then val else a) vs)
+applySust var val (L n vs) = L n $ map (\a -> if a==var then val else a) vs
 
 freeVars :: Rule -> [Variable]
 freeVars (R h body) =
-    (nub . foldr (\(L _ vs) acc -> (filter isVar vs) ++ acc) []) (h:body)
+    nub . foldr (\(L _ vs) acc -> (filter isVar vs) ++ acc) [] $ (h:body)
 
 isVar :: Variable -> Bool
 isVar (Var _)   = True
