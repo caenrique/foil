@@ -27,7 +27,7 @@ posibleVars vs = vs ++ map (Var . ('Z':) . show) [0..length vs - 2]
 
 bestLiteral :: BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> [Literal] -> Literal
 bestLiteral dom const ejs ejsn r@(R h lts) ls =
-    ls !! (index $ elemIndex (maximum $ gainval) gainval)
+    ls !! (index $ elemIndex (maximum gainval) gainval)
     where
         gainval = map (gain dom const ejs ejsn r) ls
         index (Just i)  = i
@@ -42,7 +42,7 @@ gain dom const ejs ejsn r@(R h lts) l =
             r' lit      = R h (l:lts)
             log2 0      = 0
             log2 x      = logBase 2 x
-            sDiv a 0    = a
+            sDiv a 0    = 0
             sDiv a b    = a / b
 
 filterEj :: BC -> [Variable] -> Rule -> [Ejemplo] -> [Ejemplo]

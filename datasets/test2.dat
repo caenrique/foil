@@ -1,0 +1,11 @@
+padre(sharon, bob)
+padre(bob, victor)
+padre(tom, bob)
+
+madre(bob, marta)
+
+mujer(marta)
+mujer(sharon)
+
+nieta(victor, sharon)
+nieta(marta, sharon)
