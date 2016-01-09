@@ -25,21 +25,23 @@ posibleVars vs = vs ++ map (Var . ('Z':) . show) [0..length vs - 2]
 
 bestLiteral :: BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> [Literal] -> Literal
 bestLiteral dom const ejs ejsn r@(R h lts) ls =
-    ls !! (index $ elemIndex (maximum gainval) gainval)
+    ls !! (index $ elemIndex (maximum $ gainval) gainval)
     where
-        p rd    = fromIntegral $ length . filter (cubre dom const rd) $ ejs
-        n rd    = fromIntegral $ length . filter (cubre dom const rd) $ ejsn
-        gain l  = (t l) * ((log2 (p (r' l) `sDiv` (p (r' l) + n (r' l))))
-                        - (log2 (p r `sDiv` (p r + n r))))
-        r' l    = (R h (l:lts))
-        gainval = map gain ls
-        t l     = p $ r' l
+        gainval = map (gain dom const ejs ejsn r) ls
         index (Just i)  = i
         index _         = 0
-        log2 0  = 0
-        log2 x  = logBase 2 x
 
-sDiv a b | b == 0 = a | otherwise = a / b
+gain :: BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> Literal -> Float
+gain dom const ejs ejsn r@(R h lts) l =
+    (t l) * ((log2 (p (r' l) `sDiv` (p (r' l) + n (r' l)))) - (log2 (p r `sDiv` (p r + n r))))
+    where   p rd        = fromIntegral $ length . filter (cubre dom const rd) $ ejs
+            n rd        = fromIntegral $ length . filter (cubre dom const rd) $ ejsn
+            t lit       = p $ r' lit
+            r' lit      = R h (l:lts)
+            log2 0      = 0
+            log2 x      = logBase 2 x
+            sDiv a 0    = a
+            sDiv a b    = a / b
 
 filterEj :: BC -> [Variable] -> Rule -> [Ejemplo] -> [Ejemplo]
 filterEj bc const rule ep = filter (not . cubre bc const rule) ep
