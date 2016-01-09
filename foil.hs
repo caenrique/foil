@@ -23,7 +23,7 @@ main = do
     let bc = filter ((/=objName) . getName) parseado
     let ejemplos = map getVars $ filter ((==objName) . getName) parseado
     let const = getConstants bc
-    let ejN = filter (not . (`elem` ejemplos)) . genVal (length $ getVars lobj) $ const
+    let ejN = filter (not . (`elem` ejemplos)) . genSetRep (length $ getVars lobj) $ const
     putStrLn $ pretty $ foil bc const lobj ejN ejemplos []
 
 
