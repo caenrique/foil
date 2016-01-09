@@ -42,7 +42,7 @@ gain dom const ejs ejsn r@(R h lts) l =
             r' lit      = R h (l:lts)
             log2 0      = 0
             log2 x      = logBase 2 x
-            sDiv a 0    = 0
+            sDiv a 0    = a
             sDiv a b    = a / b
 
 filterEj :: BC -> [Variable] -> Rule -> [Ejemplo] -> [Ejemplo]
