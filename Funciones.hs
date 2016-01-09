@@ -2,7 +2,7 @@ module Funciones (pretty, getName, getVars, getConstants, genRule, filterEj, gen
 import Datos
 import Data.List
 
-genRule :: BC -> [String] -> [Ejemplo] -> [Ejemplo] -> Rule -> Rule
+genRule :: BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> Rule
 genRule dom const en ep robj@(R h ls)
     | length en == 0 = robj
     | otherwise         = genRule dom const newEn ep (R h (ls ++ [nextLiteral]))
@@ -18,12 +18,12 @@ genLiterals bc vas =
             lit $ zip vs lstv)
         (genVar (length vs) newVars))
     $ nubBy (\(L na _) (L nb _) -> na == nb) bc
-    where newVars = map show $ posibleVars vas
+    where newVars = posibleVars vas
 
 posibleVars :: [Variable] -> [Variable]
 posibleVars vs = vs ++ map (Var . ('Z':) . show) [0..length vs - 2]
 
-bestLiteral :: BC -> [String] -> [Ejemplo] -> [Ejemplo] -> Rule -> [Literal] -> Literal
+bestLiteral :: BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> [Literal] -> Literal
 bestLiteral dom const ejs ejsn r@(R h lts) ls =
     ls !! (index $ elemIndex (maximum gainval) gainval)
     where
@@ -41,30 +41,30 @@ bestLiteral dom const ejs ejsn r@(R h lts) ls =
 
 sDiv a b | b == 0 = a | otherwise = a / b
 
-filterEj :: BC -> [String] -> Rule -> [Ejemplo] -> [Ejemplo]
+filterEj :: BC -> [Variable] -> Rule -> [Ejemplo] -> [Ejemplo]
 filterEj bc const rule ep = filter (not . cubre bc const rule) ep
 
-cubre :: BC -> [String] -> Rule -> Ejemplo -> Bool
+cubre :: BC -> [Variable] -> Rule -> Ejemplo -> Bool
 cubre bc const r ej = or . map (evalRule bc) $ buildRule r const ej
 
-buildRule :: Rule -> [String] -> Ejemplo -> [Rule]
+buildRule :: Rule -> [Variable] -> Ejemplo -> [Rule]
 buildRule r const ej = posibleRules const . apply r . zip (freeVars r) $ ej
 
 evalRule :: BC -> Rule -> Bool
 evalRule bc (R _ t) = and . map (`elem` bc) $ t
 
-posibleRules :: [String] -> Rule -> [Rule]
+posibleRules :: [Variable] -> Rule -> [Rule]
 posibleRules const r =
     map (\a -> apply r $ zip vars a) $ genVal (length vars) const
     where vars = freeVars r
 
-genVal :: Int -> [String] -> [[Variable]]
+genVal :: Int -> [Variable] -> [[Variable]]
 genVal 0 _ = [[]]
-genVal n cs  = concat [map ((Val x):) (genVal (n-1) $ delete x cs) | x <- cs]
+genVal n cs  = concat [map (x:) (genVal (n-1) $ delete x cs) | x <- cs]
 
-genVar :: Int -> [String] -> [[Variable]]
+genVar :: Int -> [Variable] -> [[Variable]]
 genVar 0 _ = [[]]
-genVar n cs  = concat [map ((Var x):) (genVar (n-1) $ delete x cs) | x <- cs]
+genVar n cs  = concat [map (x:) (genVar (n-1) $ delete x cs) | x <- cs]
 
 apply :: Rule -> [(Variable, Variable)] -> Rule
 apply (R hls ls) sust = R (head $ appl [hls] sust) $ appl ls sust
@@ -91,9 +91,5 @@ getName (L nombre _) = nombre
 getVars :: Literal -> [Variable]
 getVars (L _ vars) = vars
 
-extfromvar :: Variable -> String
-extfromvar (Var x) = x
-extfromvar (Val x) = x
-
-getConstants :: BC -> [String]
-getConstants bc = nub . map extfromvar . concat . map getVars $ bc
+getConstants :: BC -> [Variable]
+getConstants bc = nub . concat . map getVars $ bc
