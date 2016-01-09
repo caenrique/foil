@@ -16,9 +16,11 @@ genLiterals bc vas =
             foldr (\(v, nv) acc ->
                 applySust v nv acc) 
             lit $ zip vs lstv)
-        (genVar (length vs) newVars))
+        $ ifOneVar (length vs))
     $ nubBy (\(L na _) (L nb _) -> na == nb) bc
-    where newVars = map show $ posibleVars vas
+    where   newVars     = map show $ posibleVars vas
+            ifOneVar 1  = map (:[]) vas
+            ifOneVar n  = genVar n newVars
 
 posibleVars :: [Variable] -> [Variable]
 posibleVars vs = vs ++ map (Var . ('Z':) . show) [0..length vs - 2]
