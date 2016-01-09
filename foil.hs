@@ -3,7 +3,7 @@ import Funciones
 import Datos
 import FoilParser
 
-foil :: BC -> [String] -> Literal -> [Ejemplo] -> [Ejemplo] -> [Rule] -> [Rule]
+foil :: BC -> [Variable] -> Literal -> [Ejemplo] -> [Ejemplo] -> [Rule] -> [Rule]
 foil _   _     _   _  [] r = r
 foil dom const obj en ep r = foil dom const obj en newEp (r ++ [newRule])
     where newRule   = genRule dom const en ep (R obj [])
