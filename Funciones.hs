@@ -18,7 +18,7 @@ genLiterals bc vas =
             lit $ zip vs lstv)
         $ ifOneVar (length vs))
     $ nubBy (\(L na _) (L nb _) -> na == nb) bc
-    where   newVars     = map show $ posibleVars vas
+    where   newVars     = posibleVars vas
             ifOneVar 1  = map (:[]) vas
             ifOneVar n  = genVar n newVars
 
