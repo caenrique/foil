@@ -1,5 +1,5 @@
 ## Tareas y funcionalidades por hacer antes de entregar el trabajo
-- [ ] uso de /= y == como operadores
+- [x] uso de /= y == como operadores
 - [ ] capacidad de aprender predicados recursivos
 - [ ] documentar el codigo
 - [x] mejorar parser para que ignore espacios en blanco
