@@ -1,5 +1,7 @@
 module Funciones (pretty, getName, getVars, getConstants, genRule, filterEj, genSetRep) where
 import Datos
+import Control.Monad
+import Math.Combinat.Sets
 import Data.List
 
 genRule :: BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> Rule
@@ -10,17 +12,20 @@ genRule dom const en ep robj@(R h ls)
           newEn         = filter (cubre dom const (R h (nextLiteral:ls))) en
 
 genLiterals :: BC -> [Variable] -> [Literal]
-genLiterals bc vas =
-    concat $ map (\lit@(L n vs) ->
+genLiterals bc vas = genLiterals' vas ++
+    (concat $ map (\lit@(L n vs) ->
         map (\lstv ->
             foldr (\(v, nv) acc ->
                 applySust v nv acc) 
             lit $ zip vs lstv)
         $ ifOneVar (length vs))
-    $ nubBy (\(L na _) (L nb _) -> na == nb) bc
+    $ nubBy (\(L na _) (L nb _) -> na == nb) bc)
     where   newVars     = posibleVars vas
             ifOneVar 1  = map (:[]) vas
             ifOneVar n  = genSetNoRep n newVars
+
+genLiterals' :: [Variable] -> [Literal]
+genLiterals' vas = concat $ map (\(a0:a1:[]) -> [E a0 a1, NE a0 a1]) $ choose 2 vas 
 
 posibleVars :: [Variable] -> [Variable]
 posibleVars vs = vs ++ map (Var . ('Z':) . show) [0..length vs - 2]
@@ -55,7 +60,10 @@ buildRule :: Rule -> [Variable] -> Ejemplo -> [Rule]
 buildRule r const ej = posibleRules const . apply r . zip (freeVarsHead r) $ ej
 
 evalRule :: BC -> Rule -> Bool
-evalRule bc (R _ t) = and . map (`elem` bc) $ t
+evalRule bc (R _ t) = and . map evalLit $ t
+    where   evalLit l@(L _ _) = l `elem` bc
+            evalLit (E a b) = a == b
+            evalLit (NE a b) = a /= b
 
 posibleRules :: [Variable] -> Rule -> [Rule]
 posibleRules const r =
@@ -63,8 +71,7 @@ posibleRules const r =
     where vars = freeVarsBody r
 
 genSetRep :: Int -> [Variable] -> [[Variable]]
-genSetRep 0 _ = [[]]
-genSetRep n cs  = concat [map (x:) (genSetRep (n-1) cs) | x <- cs]
+genSetRep n vs = replicateM n vs 
 
 genSetNoRep :: Int -> [Variable] -> [[Variable]]
 genSetNoRep 0 _ = [[]]
@@ -75,15 +82,16 @@ apply (R hls ls) sust = R (head $ appl [hls] sust) $ appl ls sust
     where appl vars s = foldr (\(var, val) acc -> map (applySust var val) acc) vars s
 
 applySust :: Variable -> Variable -> Literal -> Literal
-applySust var val (L n vs) = L n $ map (\a -> if a==var then val else a) vs
+applySust var val l = setVars l $ map (\a -> if a==var then val else a) $ getVars l
 
 freeVarsHead :: Rule -> [Variable]
-freeVarsHead (R h _) =
-    nub . foldr (\(L _ vs) acc -> (filter isVar vs) ++ acc) [] $ [h]
+freeVarsHead (R (L _ vs) _) = filter isVar vs
 
 freeVarsBody :: Rule -> [Variable]
-freeVarsBody (R _ body) =
-    nub . foldr (\(L _ vs) acc -> (filter isVar vs) ++ acc) [] $ body
+freeVarsBody (R _ body) = nub . foldr lit [] $ body
+    where   lit (L _ vs) acc = (filter isVar vs) ++ acc
+            lit (E a b) acc = (filter isVar [a,b]) ++ acc
+            lit (NE a b) acc = (filter isVar [a,b]) ++ acc
 
 isVar :: Variable -> Bool
 isVar (Var _)   = True
@@ -98,6 +106,14 @@ getName (L nombre _) = nombre
 
 getVars :: Literal -> [Variable]
 getVars (L _ vars) = vars
+getVars (E a b) = [a,b]
+getVars (NE a b) = [a,b]
+
+setVars :: Literal -> [Variable] -> Literal
+setVars (L n _) v = L n v
+setVars (E _ _) (v0:v1:vs) = E v0 v1
+setVars (NE _ _) (v0:v1:vs) = NE v0 v1
+setVars x _ = x
 
 getConstants :: BC -> [Variable]
 getConstants bc = nub . concat . map getVars $ bc
