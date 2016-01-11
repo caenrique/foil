@@ -5,9 +5,10 @@ import FoilParser
 
 foil :: BC -> [Variable] -> Literal -> [Ejemplo] -> [Ejemplo] -> [Rule] -> [Rule]
 foil _   _     _   _  [] r = r
-foil dom const obj en ep r = foil dom const obj en newEp (r ++ [newRule])
-    where newRule   = genRule dom const en ep (R obj [])
-          newEp     = filterEj dom const newRule ep
+foil bc const obj en ep r = foil bc const obj en newEp (r ++ [newRule])
+    where newRule   = genRule bc bcEj const en ep (R obj [])
+          newEp     = filterEj bc bcEj const newRule ep
+          bcEj      = map (L (getName obj)) ep
 
 getFromEither :: Either a b -> b
 getFromEither (Right x) = x

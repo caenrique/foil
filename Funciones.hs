@@ -4,16 +4,19 @@ import Control.Monad
 import Math.Combinat.Sets
 import Data.List
 
-genRule :: BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> Rule
-genRule dom const en ep robj@(R h ls)
-    | length en == 0 = robj
-    | otherwise         = genRule dom const newEn ep (R h (ls ++ [nextLiteral]))
-    where nextLiteral   = bestLiteral dom const ep en robj $ genLiterals dom $ freeVarsHead robj
-          newEn         = filter (cubre dom const (R h (nextLiteral:ls))) en
+genRule :: BC -> BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> Rule
+genRule bc bcEj const en ep robj@(R h ls)
+    | length en == 0    = robj
+    | length ls == 0    = genRule bc bcEj const newEn ep (R h [nextLiteral])
+    | otherwise         = genRule bc bcEj const newEn ep (R h (ls ++ [nextLiteral2]))
+    where nextLiteral   = bestLiteral bc bcEj const ep en robj $ genLiterals bc h $ freeVarsHead robj
+          nextLiteral2  = bestLiteral bc bcEj const ep en robj $ genLiterals (h:bc) h $ freeVarsHead robj
+          newEn         = filter (cubre bc bcEj const (R h (nextLiteral:ls))) en
 
-genLiterals :: BC -> [Variable] -> [Literal]
-genLiterals bc vas = genLiterals' vas ++
+genLiterals :: BC -> Literal -> [Variable] -> [Literal]
+genLiterals bc lobj vas = genLiterals' vas ++
     (concat $ map (\lit@(L n vs) ->
+        filter (/=lobj) $
         map (\lstv ->
             foldr (\(v, nv) acc ->
                 applySust v nv acc) 
@@ -30,40 +33,54 @@ genLiterals' vas = concat $ map (\(a0:a1:[]) -> [E a0 a1, NE a0 a1]) $ choose 2 
 posibleVars :: [Variable] -> [Variable]
 posibleVars vs = vs ++ map (Var . ('Z':) . show) [0..length vs - 2]
 
-bestLiteral :: BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> [Literal] -> Literal
-bestLiteral dom const ejs ejsn r@(R h lts) ls =
+bestLiteral :: BC -> BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> [Literal] -> Literal
+bestLiteral bc bcEj const ejs ejsn r@(R h lts) ls =
     ls !! (index $ elemIndex (maximum gainval) gainval)
     where
-        gainval = map (gain dom const ejs ejsn r) ls
+        gainval = map (gain bc bcEj const ejs ejsn r) ls
         index (Just i)  = i
         index _         = 0
 
-gain :: BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> Literal -> Float
-gain dom const ejs ejsn r@(R h lts) l =
+gain :: BC -> BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> Literal -> Float
+gain bc bcEj const ejs ejsn r@(R h lts) l =
     (t l) * ((log2 (p (r' l) `sDiv` (p (r' l) + n (r' l)))) - (log2 (p r `sDiv` (p r + n r))))
-    where   p rd        = fromIntegral $ length . filter (cubre dom const rd) $ ejs
-            n rd        = fromIntegral $ length . filter (cubre dom const rd) $ ejsn
+    where   p rd        = fromIntegral $ length . filter (cubre bc bcEj const rd) $ ejs
+            n rd        = fromIntegral $ length . filter (cubre bc bcEj const rd) $ ejsn
             t lit       = p $ r' lit
-            r' lit      = R h (l:lts)
+            r' lit      = R h (lts ++ [l])
             log2 0      = 0
             log2 x      = logBase 2 x
             sDiv a 0    = a
             sDiv a b    = a / b
 
-filterEj :: BC -> [Variable] -> Rule -> [Ejemplo] -> [Ejemplo]
-filterEj bc const rule ep = filter (not . cubre bc const rule) ep
+filterEj :: BC -> BC -> [Variable] -> Rule -> [Ejemplo] -> [Ejemplo]
+filterEj bc bcEj const rule ep = filter (not . cubre bc bcEj const rule) ep
 
-cubre :: BC -> [Variable] -> Rule -> Ejemplo -> Bool
-cubre bc const r ej = or . map (evalRule bc) $ buildRule r const ej
+cubre :: BC -> BC -> [Variable] -> Rule -> Ejemplo -> Bool
+cubre bc bcEj const r ej = or . map (evalRule bc bcEj r const) $ br
+    where br = buildRule r const ej
 
 buildRule :: Rule -> [Variable] -> Ejemplo -> [Rule]
-buildRule r const ej = posibleRules const . apply r . zip (freeVarsHead r) $ ej
+buildRule r const ej = filtra $ posibleRules const . apply r . zip (freeVarsHead r) $ ej
+    where filtra = filter (not . hayBucle)
 
-evalRule :: BC -> Rule -> Bool
-evalRule bc (R _ t) = and . map evalLit $ t
-    where   evalLit l@(L _ _) = l `elem` bc
-            evalLit (E a b) = a == b
-            evalLit (NE a b) = a /= b
+hayBucle :: Rule -> Bool
+hayBucle (R h lts) = h `elem` lts
+
+evalRule :: BC -> BC -> Rule -> [Variable] -> Rule -> Bool
+evalRule bc bcEj r const (R h []) = True
+evalRule bc bcEj r const rule@(R h (t@(L _ ej):ts))
+    | h `litEq` t   = (evalLit bcEj t) && (evalRule bc bcEj r const (R h ts))
+    | otherwise     = (evalLit bc t) && (evalRule bc bcEj r const (R h ts))
+evalRule bc bcEj r const rule@(R h (t:ts)) = (evalLit bc t) && (evalRule bc bcEj r const (R h ts))
+
+evalLit :: BC -> Literal -> Bool
+evalLit _ (E a b)       = a == b
+evalLit _ (NE a b)      = a /= b
+evalLit bc l@(L _ _)    = l `elem` bc
+
+litEq :: Literal -> Literal -> Bool
+litEq (L n _) (L m _) = n == m
 
 posibleRules :: [Variable] -> Rule -> [Rule]
 posibleRules const r =
@@ -98,7 +115,7 @@ isVar (Var _)   = True
 isVar _         = False
 
 pretty :: [Rule] -> String
-pretty (r:[]) = show r
+pretty [] = ""
 pretty (r:rs) = show r ++ "\n" ++ pretty rs
 
 getName :: Literal -> String
