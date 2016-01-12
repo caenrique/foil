@@ -1,14 +1,7 @@
 import System.Environment
-import Funciones
-import Datos
+import Foil
+import Datos.Metodos
 import FoilParser
-
-foil :: BC -> [Variable] -> Literal -> [Ejemplo] -> [Ejemplo] -> [Rule] -> [Rule]
-foil _   _     _   _  [] r = r
-foil bc const obj en ep r = foil bc const obj en newEp (r ++ [newRule])
-    where newRule   = genRule bc bcEj const en ep (R obj [])
-          newEp     = filterEj bc bcEj const newRule ep
-          bcEj      = map (L (getName obj)) ep
 
 getFromEither :: Either a b -> b
 getFromEither (Right x) = x
@@ -25,6 +18,6 @@ main = do
     let ejemplos = map getVars $ filter ((==objName) . getName) parseado
     let const = getConstants bc
     let ejN = filter (not . (`elem` ejemplos)) . genSetRep (length $ getVars lobj) $ const
-    putStrLn $ pretty $ foil bc const lobj ejN ejemplos []
+    putStrLn $ prettyPrint $ foil bc const lobj ejN ejemplos []
 
 
