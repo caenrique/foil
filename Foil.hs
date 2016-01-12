@@ -6,7 +6,7 @@ import Math.Combinat.Sets
 import Data.List
 
 foil :: BC -> [Variable] -> Literal -> [Ejemplo] -> [Ejemplo] -> [Rule] -> [Rule]
-foil _   _     _   _  [] r = r
+foil _  _     _   _  [] r = r
 foil bc const obj en ep r = foil bc const obj en newEp (r ++ [newRule])
     where newRule   = genRule bc bcEj const en ep (R obj [])
           newEp     = filterEj bc bcEj const newRule ep
@@ -38,9 +38,6 @@ genLiterals bc lobj vas = genLiterals' vas ++
 genLiterals' :: [Variable] -> [Literal]
 genLiterals' vas = concat $ map (\(a0:a1:[]) -> [E a0 a1, NE a0 a1]) $ choose 2 vas 
 
-posibleVars :: [Variable] -> [Variable]
-posibleVars vs = vs ++ map (Var . ('Z':) . show) [0..length vs - 2]
-
 bestLiteral :: BC -> BC -> [Variable] -> [Ejemplo] -> [Ejemplo] -> Rule -> [Literal] -> Literal
 bestLiteral bc bcEj const ejs ejsn r@(R h lts) ls =
     ls !! (index $ elemIndex (maximum gainval) gainval)
@@ -61,9 +58,6 @@ gain bc bcEj const ejs ejsn r@(R h lts) l =
             sDiv a 0    = a
             sDiv a b    = a / b
 
-filterEj :: BC -> BC -> [Variable] -> Rule -> [Ejemplo] -> [Ejemplo]
-filterEj bc bcEj const rule ep = filter (not . cubre bc bcEj const rule) ep
-
 cubre :: BC -> BC -> [Variable] -> Rule -> Ejemplo -> Bool
 cubre bc bcEj const r ej = or . map (evalRule bc bcEj r const) $ br
     where br = buildRule r const ej
@@ -83,12 +77,8 @@ posibleRules :: [Variable] -> Rule -> [Rule]
 posibleRules const r = map (\a -> ruleApply r $ zip vars a) $ genSetRep (length vars) const
     where vars = bFreeVars r
 
-genSetRep :: Int -> [a] -> [[a]]
-genSetRep n vs = replicateM n vs 
-
-genSetNoRep :: Eq a => Int -> [a] -> [[a]]
-genSetNoRep 0 _ = [[]]
-genSetNoRep n cs  = concat [map (x:) (genSetNoRep (n-1) $ delete x cs) | x <- cs]
+posibleVars :: [Variable] -> [Variable]
+posibleVars vs = vs ++ map (Var . ('Z':) . show) [0..length vs - 2]
 
 ruleApply :: Rule -> [(Variable, Variable)] -> Rule
 ruleApply (R hls ls) sust = R (head $ appl [hls] sust) $ appl ls sust
@@ -96,3 +86,13 @@ ruleApply (R hls ls) sust = R (head $ appl [hls] sust) $ appl ls sust
 
 literalApply :: Variable -> Variable -> Literal -> Literal
 literalApply var val l = setVars l $ map (\a -> if a==var then val else a) $ getVars l
+
+filterEj :: BC -> BC -> [Variable] -> Rule -> [Ejemplo] -> [Ejemplo]
+filterEj bc bcEj const rule ep = filter (not . cubre bc bcEj const rule) ep
+
+genSetRep :: Int -> [a] -> [[a]]
+genSetRep n vs = replicateM n vs
+
+genSetNoRep :: Eq a => Int -> [a] -> [[a]]
+genSetNoRep 0 _ = [[]]
+genSetNoRep n cs  = concat [map (x:) (genSetNoRep (n-1) $ delete x cs) | x <- cs]
