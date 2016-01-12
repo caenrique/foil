@@ -2,3 +2,5 @@ tmux-session
 *.o
 *.hi
 dist
+*.gen
+*.sh

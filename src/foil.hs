@@ -1,3 +1,4 @@
+module Main where
 import System.Environment
 import Foil
 import Datos.Metodos
@@ -16,8 +17,8 @@ main = do
     let objName = getName lobj
     let bc = filter ((/=objName) . getName) parseado
     let ejemplos = map getVars $ filter ((==objName) . getName) parseado
-    let const = getConstants bc
-    let ejN = filter (not . (`elem` ejemplos)) . genSetRep (length $ getVars lobj) $ const
-    putStrLn $ prettyPrint $ foil bc const lobj ejN ejemplos []
+    let dom = getConstants bc
+    let ejN = filter (not . (`elem` ejemplos)) . genSetRep (length $ getVars lobj) $ dom
+    putStrLn $ prettyPrint $ foil bc dom lobj ejN ejemplos []
 
 

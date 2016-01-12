@@ -16,7 +16,7 @@ instance Show Variable where
     show (Val a) = a
 
 instance Show Rule where
-    show (R head tail) = shows head $ ':':'-':' ':(intercalate ", " (map show tail)) ++ "."
+    show (R h t) = shows h $ ':':'-':' ':(intercalate ", " (map show t)) ++ "."
 
 instance Show Literal where
     show (L name params) = name ++ '(':(intercalate "," $ map show params) ++ ")"
