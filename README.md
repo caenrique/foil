@@ -11,19 +11,19 @@ ejecuta: `cabal install` y tendrás el ejecutable en `dist/build/foil/`
 
 en el mismo directorio que el archivo ejecutable (`dist/build/foil/`):
 
-'''
+```
     ./foil <dataset> <"regla objetivo">
-'''
+```
 
 donde:
     * **dataset** es la ruta al archivo con el conocimiento de fondo y los ejemplos.
     * **"regla objetivo"** es la regla que queremos que foil extraiga. Entre comillas.
 
 Ejemplo: 
-'''
+```
     >$ ./foil test1.dat "nieta(X,Y)"
     nieta(X,Y):- mujer(Y), padre(Z0,X), padre(Y,Z0).
-'''
+```
 
 # Licencia
 
