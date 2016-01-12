@@ -16,8 +16,8 @@ en el mismo directorio que el archivo ejecutable (`dist/build/foil/`):
 ```
 
 donde:
-    * **dataset** es la ruta al archivo con el conocimiento de fondo y los ejemplos.
-    * **"regla objetivo"** es la regla que queremos que foil extraiga. Entre comillas.
+- **dataset** es la ruta al archivo con el conocimiento de fondo y los ejemplos.
+- **"regla objetivo"** es la regla que queremos que foil extraiga. Entre comillas.
 
 Ejemplo: 
 ```
