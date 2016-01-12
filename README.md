@@ -5,7 +5,7 @@ Esta implementación de FOIL hace uso de la asumpción de mundo cerrado, es deci
 
 # Instalación
 
-ejecuta: `cabal install` y tendrás el ejecutable en **dist/build/**
+ejecuta: `cabal install` y tendrás el ejecutable en `dist/build/`
 
 # Licencia
 
