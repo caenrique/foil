@@ -1,3 +1,4 @@
 tmux-session
 *.o
 *.hi
+dist
