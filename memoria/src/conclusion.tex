@@ -1,0 +1,21 @@
+\section{Conclusión}
+Después de haber implementado el algoritmo FOIL podemos llegar a la coclusión de que para conseguir una implementación medianamente usable en casos reales se require mucho más código que tenga cuidado de cuestiones problemáticas, que lo que sería el código del algoritmo en sí.
+La complejidad de FOIL en cuanto a dificultad de desarrollo es mucho mayor de lo que parece a primera vista, y eso se corresponde con su potencialidad.
+Aún siendo un algoritmo dificil de adaptar para algunos tipos de problemas, vamos viendo como con ideas ingeniosas se consigue modelar para que foil pueda trabajar con el.
+Consiguiendo una eficacia no demasiado buena en algunos campos, como por ejemplo los problemas esencialmente de tipo atributo-valor, optimizado adecuadamente no está demasido lejos el algoritmo C4.5 en algunas situaciones. En el otro extremo, en los casos idóneos para FOIL, muestra resultados muy buenos, haciendo que consideremos a FOIL como un algoritmo bastante potente.
+
+Quizá la mayor dificultad a la hora de abordar un problema mediante FOIL es el modelado del mismo.
+
+El uso de Haskell como lenguaje de programación para esta implementación muestra ventajas e incovenientes. Por un lado, las ventajas son:
+\begin{itemize}
+\item poco código (unas 240 líneas de código en total)
+\item descripción del algoritmo mediante composición de operaciones
+\item aprovechamiento de la evaluación perezosa de haskell para mejorar el rendimiento
+\item uso del sistema de tipos de haskell para guiar el desarrollo.
+\end{itemize}
+
+Por otro lado, los inconvenientes son:
+\begin{itemize}
+\item dificultad para definir ciertas partes iterativas, teniendo que usar estucturas poco claras.
+\item posible bajo rendimiento debido a la descripción del algoritmo usando estucturas de alto nivel, como \emph{filter}, \emph{map}, \emph{fold}, etc, para encapsular la recursividad.
+\end{itemize}

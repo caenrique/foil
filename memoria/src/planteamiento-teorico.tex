@@ -44,7 +44,7 @@ Los diferentes literales permitidos en el cuerpo de una regla son de una de las 
 \item $X_{i} = x_{j}$ y $X_{i} \neq X_{j}$ donde $X_{i}$ y $X_{j}$ no son nuevas variables.
 \end{itemize}
 
-Además, los literales del tipo $L(...)$ tienen que tener al menos una variable usada antes en la regla. Según el artículo original, dicha variable podría ser una variable usada anteriormente en el cuerpo de la regla, pero dada la sencillez de nuestra implementación, los literales quedan restringidos a usar al menos una variable que aparezca en la cabeza de la regla. Esto supone una solución fácil, aunque mala, a alguno problemas provocados por no implementar técnicas de \emph{pruning} o detección de reglas excesivamente complejas\footnote{Hablaremos sobre esto en el apartado \ref{}}
+Además, los literales del tipo $L(...)$ tienen que tener al menos una variable usada antes en la regla. Según \cite{Quinlan1995}, dicha variable podría ser una variable usada anteriormente en el cuerpo de la regla, pero dada la sencillez de nuestra implementación, los literales quedan restringidos a usar al menos una variable que aparezca en la cabeza de la regla. Esto supone una solución fácil, aunque mala, a alguno problemas provocados por no implementar técnicas de \emph{pruning} o detección de reglas excesivamente complejas\footnote{Hablaremos sobre esto en el apartado \ref{}}
   
 La selección del mejor literal se realiza haciendo uso de una heurística. Siendo el número de ejemplos $\oplus$ y ejemplos $\ominus$ que cubre una regla parcial $n^{\oplus}$ y $n^{\ominus}$ respectivamente, la información que proporciona una sustitución positiva es
 

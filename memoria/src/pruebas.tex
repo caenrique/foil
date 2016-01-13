@@ -1,23 +1,43 @@
 \section{Pruebas}
-Debido a la naturaleza de los datos con los que trata FOIL, no podemos hacer pruebas generando datos aleatoriamente, por lo que las pruebas tienen que ser cuidadosamente diseñadas. Para intentar suplir esta cuestión hemos hecho 2 tipos de pruebas diferentes: pruebas con 3 datasets sencillos diseñados a mano, y pruebas usando el criterio de validación \emph{Holdout}.
+Debido a la naturaleza de los datos con los que trata FOIL, no podemos hacer pruebas generando datos aleatoriamente, por lo que las pruebas tienen que ser cuidadosamente diseñadas. Para intentar suplir esta cuestión hemos hecho prubas con 5 datasets siendo tres de ellos datasets muy sencillos escritos a mano para probar casos límite, un dataset más extenso obtenido del repositorio \emph{UCI, machine learning repository} y otro dataset sencillo enfocado en los predicados recursivos.
+
+\clearpage
 
 \subsection{Pruebas con 3 datasets sencillos}
-Los tres datasets están basados en la relación \emph{nieta(X,Y)} usando las relaciones \emph{padre(X,Y)} y \emph{mujer(X)}.
+Los tres primeros datasets están basados en la relación \emph{nieta(X,Y)} usando las relaciones \emph{padre(X,Y)} y \emph{mujer(X)}.
 
 Con el primer dataset FOIL genera la regla:
-\begin{equation}
+\begin{lstlisting}
   nieta(X,Y) :- mujer(Y), padre(Y,Z0), padre(Z0,X).
-\end{equation}
+\end{lstlisting}
 que es cierta en el 100\% de los casos.
 Es con el segundo dataset donde se empiezan a ver algunos problemas de esta implementación. En concreto problemas de sobre ajuste. Foil considera que todas las \emph{nietas} que existen están descritas por los ejemplos, por lo tanto, cuando analiza la base de conocimiento y encuentra una estructura familiar en la que la única nieta que existe tiene tanto un abuelo como una abuela, la regla que produce
-\begin{equation}
+\begin{lstlisting}
   nieta(X,Y) :- mujer(Y), nieta(Z0,Y), X \neq Y, mujer(X).
-\end{equation}
-\begin{equation}
   nieta(X,Y) :- mujer(Y), padre(Y,Z0), padre(Z0,X).
-\end{equation}
+\end{lstlisting}
 describe la relación nieta, como X e Y tal que Y es mujer, X es mujer, son distintas personas y además Y es nieta de otra persona Z0, o bien, de forma que Y sea mujer, haya un Z0 que es padre de Y, y X es padre de Z0.
 
 Esto, auque es cierto para el dataset en cuestión, no es cierto en general, por lo que no debería ser una solución aceptable. Nuevamente, esto es debido a la falta de restricciones y mejoras descritas en la publicación original de FOIL, pero que no se han implementado en esta versión.
 
-\subsection{Puebas usando \emph{Holdout} en el dataset de las relaciones familiares}
+El cuarto dataset contiene relaciones familiares de dos familias con estructuras similares. Aplicando FOIL a éste dataset podemos observar relaciones como por ejemplo:
+
+\begin{lstlisting}
+  father(X,Y) :- son(Y,X), father(X,Z0).
+  father(X,Y) :- daughter(Y,X), husband(X,Z0).
+\end{lstlisting}
+
+Podemos ver como proporciona una definición recursiva para un concepto que no es recursivo. Esto se debe a que en el dataset dado, todos los padre son padres de un niño y una niña, por lo que cuando está tratando de decribir la relación al comienzo, le proporciona más ganancia decir que si es padre de un niño, también lo es de una niña, y eso lo exprese mediante una llamada recursiva, que siempre termina inmediatamente en la siguiente evaluación. Esto es lo mismo que decir que la relación padre solo es cierta si es padre de 2 hijos, lo cual es cierto en el dataset, pero desafortunadamente, no es una definición que sirva en un caso general.
+
+Con este dataset podemos ver de nuevo cómo FOIL, si no se le aplican determinadas téctinas descritas en \cite{Quinlan1995}, se enfrenta al problema del sobre ajuste.
+
+Por último, utilizamos un dataset en el que se define la relación $enlace(X,Y)$, que representa un elace entre el nodo $X$ y el nodo $Y$ en un grafo dirigido.
+El objetivo es $camino(X,Y)$ que representaría que existe un camino entre el nodo $X$ y el nodo $Y$.
+El resultado es satisfactorio:
+
+\begin{lstlisting}
+  camino(X,Y) :- enlace(X,Z0), camino(Z0,Y).
+  camino(X,Y) :- enlace(X,Y).
+\end{lstlisting}
+
+En este caso podemos ver como sí que consigue una descripción adecuada para el concepto, dando además una descripción que terminaría debido a que la segunda regla es un caso base y teniendo en cuenta que el grafo es dirigido, $Z0$ siempre estará entre $X$ e $Y$ asegurando así que la llamada $camino(Z0,Y)$ es un problema más pequeño que el inicial.

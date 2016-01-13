@@ -1,1 +1,31 @@
-\section{Caso de investigación: generación de gramática para descirbir canciones que suenen bien}
+\section{Caso de investigación: identificación de partes de un documento.}
+Una aplicación de FOIL puede ser la generación de reglas para el reconocimiento de partes de un documento. La aplicación de esta idea a cartas formales es un clásico, pero muy fácilmente se le podría dar un enfoque más actual usandolo para identificar partes de un documeto estructurado como html, xml, json, etc.
+
+Los datos que podemos encontrar en repositorios online definen varios conceptos, expresados como predicados a aprender. Se tratan de pártes lógicas que se pueden identificar en los documentos, como por ejemplo en nombre de quien lo envía, el destinatario, el logotipo, la fecha, etc.
+
+Las relaciones usadas para describir la información son del tipo:
+
+\begin{table}
+  \setlength{\tabcolsep}{15pt} % Default value: 6pt
+  \begin{tabular}{l l l}
+    ancho-muy-muy-pequeño(x) & ancho-muy-pequeño(x) & ancho-pequeño(x) \\
+    ancho-medio-pequeño(x) & ancho-medio(x) & ancho-medio-grande(x) \\
+    ancho-grande(x) & ancho-muy-grande(x) & ancho-muy-muy-grande(x) \\
+  \end{tabular}
+\end{table}
+para referirse a el ancho de un bloque x, usando predicados similares para el alto, o relaciones del tipo:
+
+\begin{table}
+  \setlength{\tabcolsep}{20pt} % Default value: 6pt
+  \begin{tabular}{l l l}
+    tipo-texto(x) & tipo-linea-horiz(x) & tipo-line-vert(x) \\
+    tipo-imagen(x) & tipo-grafico(x) & tipo-mezcla(x) \\
+  \end{tabular}
+\end{table}
+para describir el tipo del bloque x.
+
+Esto se adapta muy bien a los tipos de documentos que se usan en la web, puesto que son documentos estucturados, digitales, pero sin embargo la inmensa mayoría de ellos no tienen semántica asociada a la estuctura.
+
+Documentos que usan el estandar html5 empiezan a incluir etiquetas semánticas, pero aún así, la gran mayoria de la información en la web no las usa aún. Conseguir datos para experimentar se tremendamente sencillo.
+
+Otro enfoque que se le podría dar es la identificación de las estucturas optimas para interfaces web, mediante un conjunto de datos que incluya diferentes parámetros medidos a partir del uso de los usuarios, como por ejemplo los clics en determinados enlaces, las visitas a determinada pagina, etc.
