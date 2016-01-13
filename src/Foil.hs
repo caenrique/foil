@@ -79,7 +79,7 @@ bestLiteral bc bcEj dom ejs ejsn r ls =
         index _         = 0
 
 -- | La función 'gain' calcula la ganacia de un literal al incluirlo en una regla 
--- mediante la fórmula: t * ( log2(pr' / (pr' + nr')) - log2(pr / (pr + nr)) )
+-- mediante la fórmula: /t * ( log2(pr' \/ (pr' + nr')) - log2(pr \/ (pr + nr)) )/
 gain :: BC              -- ^ Base de conocimiento.
      -> BC              -- ^ Base de conocimiento solo con los ejemplos.
      -> [Variable]      -- ^ Lista de variables del dominio.
