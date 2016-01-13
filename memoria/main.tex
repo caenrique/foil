@@ -1,0 +1,59 @@
+\documentclass[]{llncs}
+
+\usepackage{vmargin}
+\usepackage{caption} 
+\captionsetup[table]{skip=8pt}
+\usepackage{hyperref}
+\usepackage[pdftex]{color,graphicx}
+\usepackage{amssymb}
+%\usepackage{amsmath} % assumes amsmath package installed
+\usepackage{fancyvrb,fancyhdr}
+\usepackage{listings}
+\usepackage[spanish, activeacute]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{listingsutf8}
+\pagenumbering{arabic}
+\usepackage{lastpage}
+
+\pagestyle{plain}
+
+%*********************** FORMATO DE LISTADOS **************************
+\lstset{
+  basicstyle=\tiny,
+  keywordstyle=\bfseries,
+  % underlined bold black keywords
+  identifierstyle=, % nothing happens
+%  commentstyle=\color{white}, % white comments
+  stringstyle=\ttfamily, % typewriter type for strings
+  showstringspaces=false,
+  frame=single,
+  language=Java,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=2,
+  numbersep=5pt,
+  inputencoding=utf8
+}
+
+%******************** PARRAFOS ****************************************
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.8em}
+
+\author{César Antonio Enrique Ramírez}
+\title{Aprendizaje lógico inductivo. Una implementación de FOIL.}
+\institute{Universidad de Huelva}
+
+
+\begin{document}
+\maketitle
+\input{src/abstract}
+\input{src/introduccion}
+\input{src/planteamiento-teorico}
+\input{src/implementacion}
+\input{src/pruebas}
+\input{src/problemas-soluciones}
+\input{src/investigacion}
+\input{src/conclusion}
+\input{src/referencias}
+
+\end{document}

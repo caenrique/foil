@@ -1,0 +1,23 @@
+\section{Pruebas}
+Debido a la naturaleza de los datos con los que trata FOIL, no podemos hacer pruebas generando datos aleatoriamente, por lo que las pruebas tienen que ser cuidadosamente diseñadas. Para intentar suplir esta cuestión hemos hecho 2 tipos de pruebas diferentes: pruebas con 3 datasets sencillos diseñados a mano, y pruebas usando el criterio de validación \emph{Holdout}.
+
+\subsection{Pruebas con 3 datasets sencillos}
+Los tres datasets están basados en la relación \emph{nieta(X,Y)} usando las relaciones \emph{padre(X,Y)} y \emph{mujer(X)}.
+
+Con el primer dataset FOIL genera la regla:
+\begin{equation}
+  nieta(X,Y) :- mujer(Y), padre(Y,Z0), padre(Z0,X).
+\end{equation}
+que es cierta en el 100\% de los casos.
+Es con el segundo dataset donde se empiezan a ver algunos problemas de esta implementación. En concreto problemas de sobre ajuste. Foil considera que todas las \emph{nietas} que existen están descritas por los ejemplos, por lo tanto, cuando analiza la base de conocimiento y encuentra una estructura familiar en la que la única nieta que existe tiene tanto un abuelo como una abuela, la regla que produce
+\begin{equation}
+  nieta(X,Y) :- mujer(Y), nieta(Z0,Y), X \neq Y, mujer(X).
+\end{equation}
+\begin{equation}
+  nieta(X,Y) :- mujer(Y), padre(Y,Z0), padre(Z0,X).
+\end{equation}
+describe la relación nieta, como X e Y tal que Y es mujer, X es mujer, son distintas personas y además Y es nieta de otra persona Z0, o bien, de forma que Y sea mujer, haya un Z0 que es padre de Y, y X es padre de Z0.
+
+Esto, auque es cierto para el dataset en cuestión, no es cierto en general, por lo que no debería ser una solución aceptable. Nuevamente, esto es debido a la falta de restricciones y mejoras descritas en la publicación original de FOIL, pero que no se han implementado en esta versión.
+
+\subsection{Puebas usando \emph{Holdout} en el dataset de las relaciones familiares}

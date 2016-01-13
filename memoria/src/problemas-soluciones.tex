@@ -1,0 +1,32 @@
+\section{Problemas encontrados y posibles soluciones}
+A lo largo del desarrollo del algoritmo y durante la fase de pruebas nos hemos encontrado con una serie de comportamientos que no son los más deseables. Pasamos a describir dichos problemas y sus posibles soluciones.
+
+\subsection{Reglas recursivas que no terminan}
+Uno de los problemas encontrados es que las reglas recursivas generadas por esta implementación de FOIL no tienen la ganrantía de generar predicados que terminen, si se ejecutan como programa Prolog. Esto es debido a que no implementamos ninguna forma de garantizar que cada vez que se hace una llamada recursiva el tamaño del problema se reduce.
+
+Para solucionar esto en el artículo original en el que se describe FOIL se establece una técnica que hace uso del ordenamiento parcial de las constantes del dominio.
+
+Los predicados mutuamente recursivos no se tiene en cuenta, siendo las reglas
+\begin{equation}
+  marido(X,Y) :- mujer(Y,X).
+\end{equation}
+\begin{equation}
+  mujer(X,Y) :- marido(Y,X).
+\end{equation}
+definiciones válidas.
+
+\subsection{Mínimos locales}
+En algunos casos, como con el dataset 3, la generación de las reglas llega a un punto en el que no excluye a todos los ejemplos $\ominus$ a menos que incluya un literal que excluye también a todos los ejemplos $\oplus$. Esto provoca que el cálculo de la ganancia de 0 para todos los posibles literales y, por tanto, no se elimine ningún ejemplo $\oplus$ para el cálculo de la siguiente regla. Esto provoca un bucle infinito del que el algoritmo no tiene forma de salir.
+
+Para solucionar este tipo de situaciones en el artículo original se introduce en casos excepcionales el uso de \emph{backtracking}. Esto se hace estableciendo una \emph{etiqueta} en el estado de la regla cuando el literal seleccionado para ser el siguiente añadido, no es mucho mejor que el resto, de forma que si después de varias iteraciones después se llega a una situación no deseable, se vueve a como estaba en la etiqueta y se contiúa desde ahí con otro literal diferente.
+
+\subsection{Generación de reglas muy complejas}
+Otro problema que muestra esta implementación es que con ciertos datasets, genera definiciones de la relación objetivo demasiado complejas, en algunos casos con más coste de codificación de la regla en sí, que si se codificaran mediante una descripción extensional todos los ejemplos positivos que cubre esa regla.
+
+Esto se soluciona aplicando por una parte algún tipo de chequeo a las reglas generadas, para determinar si pasa de una complejidad establecida, y por otra partde aplicando lo que en el artículo original llaman \emph{pruning}.
+
+El \emph{pruning} no es más que podar las reglas una vez generadas para simplificarlas sin que éstas pierdan significado. Se basa en que cláusulas añadidas después pueden estar cubriendo y excluyendo a los mismo ejemplos $\oplus$ y $\ominus$ respectivamente, que otra añadida antes, por lo que puede ser productivo eliminar la primera.
+
+Si aparece un literal que sólo contiene variables de la cabeza de la regla, se descartan todos los literales que contienen variables libre y se continúa desde ahí.
+
+Esto también soluciona algunos problemas de sobreajuste.

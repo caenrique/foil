@@ -1,0 +1,62 @@
+\section{Planteamiento teórico de FOIL}\label{teoria}
+Como hemos mencionado antes, FOIL utiliza información sobre relaciones como entrada para generar una teoría, compuesta de reglas, que describan la relación objetivo. Podemos plantear los ejemplos como \emph{n-tuplas} representando las variables de la relación objetivo. Un ejemplo de relación objetivo sería la relación \emph{componentes}:
+
+\begin{table}[h]
+  \setlength{\tabcolsep}{20pt} % Default value: 6pt
+  \renewcommand{\arraystretch}{1.5}
+  \centering
+  \begin{tabular}{c c c}
+  $\langle$[1,1],1,[1]$\rangle$ & $\langle$[2,1],2,[1]$\rangle$ & $\langle$[3,1],3,[1]$\rangle$ \\
+  $\langle$[1,2],1,[2]$\rangle$ & $\langle$[2,2],2,[2]$\rangle$ & $\langle$[3,2],3,[2]$\rangle$ \\
+  $\langle$[1,3],1,[3]$\rangle$ & $\langle$[2,3],2,[3]$\rangle$ & $\langle$[3,3],3,[3]$\rangle$ \\
+  \end{tabular}
+  \caption{Ejemplo de relación \emph{componentes} de listas de tamaño 2}
+  \label{tab:tabla1}
+\end{table}
+donde se establece que una lista [1,2] está compuesta por la cabeza 1 y la cola [2].
+
+Todos los ejemplos descritos pertenecen a los ejemplos $\oplus$. Los ejemplos $\ominus$ se pueden determinar usando la asumpción de mundo cerrado. Por lo tanto, todos los ejemplos que no aparezcan explícitamente mencionados, como por ejemplo $\langle$[2,2],1,[2]$\rangle$, son ejemplos $\ominus$.
+
+\subsection{Algoritmo}
+\begin{figure}
+  \begin{lstlisting}[mathescape, escapechar=\#]
+    teoria := null
+    ejemplos+ := todos los ejemplos $\oplus$
+
+    mientras ejemplos+ no sea vacio
+        regla := R(X, Y, ...) :-
+        mientras regla cubra ejemplos $\ominus$
+            calcula el mejor literal L
+            a#ñ#ade el literal L a regla
+        elimina los ejemplos $\oplus$ cubiertos por regla
+        a#ñ#ade regla a teoria
+  \end{lstlisting}
+  \caption{Pseudo-código de FOIL}
+  \label{fig:figura1}
+\end{figure}
+
+Como podemos observar el algoritmo original utiliza un método iterativo, en el que va especializando progresivamente una regla hasta que no cubre ningun ejemplo $\ominus$. En muestro caso, la implementación varía ligeramente utilizando una estrategia recursiva para la implementación. En cualquier caso, son equivalentes.
+
+\subsection{Selección de literales}
+Los diferentes literales permitidos en el cuerpo de una regla son de una de las dos formas siguientes:
+\begin{itemize}
+\item $L(X_{0},X_{1},...,X_{n})$ donde $L$ es una relación y los $X_{i}$ denotan variables que aparecen antes en la regla o nuevas variables.
+\item $X_{i} = x_{j}$ y $X_{i} \neq X_{j}$ donde $X_{i}$ y $X_{j}$ no son nuevas variables.
+\end{itemize}
+
+Además, los literales del tipo $L(...)$ tienen que tener al menos una variable usada antes en la regla. Según el artículo original, dicha variable podría ser una variable usada anteriormente en el cuerpo de la regla, pero dada la sencillez de nuestra implementación, los literales quedan restringidos a usar al menos una variable que aparezca en la cabeza de la regla. Esto supone una solución fácil, aunque mala, a alguno problemas provocados por no implementar técnicas de \emph{pruning} o detección de reglas excesivamente complejas\footnote{Hablaremos sobre esto en el apartado \ref{}}
+  
+La selección del mejor literal se realiza haciendo uso de una heurística. Siendo el número de ejemplos $\oplus$ y ejemplos $\ominus$ que cubre una regla parcial $n^{\oplus}$ y $n^{\ominus}$ respectivamente, la información que proporciona una sustitución positiva es
+
+\begin{equation}
+  I(n^{\oplus}, n^{\ominus}) = - log_{2} \frac{n^{\oplus}}{(n^{\oplus} + n^{\ominus})}
+\end{equation}
+
+Por lo tanto, suponiendo que $k$ ejemplos $\oplus$ no son excluidos al incluir un nuevo literal a una regla parcial, y que el número de ejmplos que cubre la nueva regla son $m^{\oplus}$ y $o^{\ominus}$ respectivamente. La ganancia total obtenida al añadir ese literal es
+
+\begin{equation}
+  k \times (I(n^{\oplus}, n^{\ominus}) - I(m^{\oplus}, m^{\ominus})) 
+\end{equation}
+\begin{equation}
+  k \times (log_{2} \frac{m^{\oplus}}{(m^{\oplus} + m^{\ominus})} - log_{2} \frac{n^{\oplus}}{(n^{\oplus} + n^{\ominus})})
+\end{equation}

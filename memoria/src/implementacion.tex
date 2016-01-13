@@ -1,0 +1,53 @@
+\section{Implemetación en Haskell}
+Con la base de cómo funciona FOIL, podemos pasar a ver con un poco más de detalle las caracteristicas de nuestra implementación\footnote{Aunque incluiremos algunos trozos de código relevantes para el concepto que estemos tratando, esta sección no pretende documentar el código. Para esa función se adjunta a la memoria la documentación del código elaborada con la herramienta Haddock - \url{https://www.haskell.org/haddock/doc/html/}.}.
+
+Como hemos comentado en el apartado anterior, la implementación que presentamos está hecha en Haskell\footnote{\url{https://www.haskell.org/}}, un lenguaje funcional, por lo que el uso de estructuras iterativas propias de lenguajes imperativos como los bucles \emph{while} no es posible. En vez de eso, se utiliza la recursividad.
+
+\subsection{Tipos de datos}
+Antes de entrar a explicar algunas consas concretas de la implementación, es conveniente exponer rápidamente los tipos de datos definidos, para poder emplearlos a la hora de describir partes del algoritmo más adelante.
+
+\begin{itemize}
+  \item \textbf{Variable} $\rightarrow$ puede representar tanto a variables libres, como $X_{i}$, como valores concretos del dominio. 
+  \item \textbf{Literal} $\rightarrow$ representa todos los tipos de literales aceptados en el cuerpo de una regla, como son los del tipo $L(...)$, $X_{i} = X_{j}$ y $X_{i} \neq X_{j}$.
+  \item \textbf{Rule} $\rightarrow$ representa una regla. Está implementado usando un Literal para la cabeza de la regla (con la restrincción de que no puede ser un Literal de la forma $X_{i} = X_{j}$ y $X_{i} \neq X_{j}$) y una lista de Literales para el cuerpo.
+  \item \textbf{BC} $\rightarrow$ representa la base de conocimiento, y está implementado como una lista de Literales
+  \item \textbf{Ejemplo} $\rightarrow$ está implementado como una lista de Variables (en vez de como una tupla, tal como se describe en el apartado \ref{teoria})
+\end{itemize}
+
+\subsection{Ejemplo de la estructura típica del algoritmo en Haskell}
+Esta forma de describir los algoritmos propicia a que ciertas cosas que realmente representan lo mismo, a primera vista puedan parecer totalmente distintas, por poner un ejemplo esto se ve claramente en la definición de la función
+
+\begin{figure}
+  \begin{lstlisting}[escapechar=\#]
+  #\textbf{cubre}# :: BC -> BC -> [Variable] -> Rule -> Ejemplo -> Bool
+  #\textbf{cubre}# bc bcEj dom r ej = #\textbf{or}# . #\textbf{map}# (#\textbf{evalRule}# bc bcEj r dom) $ #\textbf{buildrule}# r dom ej
+\end{lstlisting}
+\caption{Función \emph{cubre}, determina si una regla cubre a un ejemlo.}
+\label{fig:figura2}
+\end{figure}
+
+en la que podemos ver como el funcionamiento de la función se expresa en término de lo que hace, no de cómo lo hace. Tenemos que \textbf{bc} es la base de conocimiento, \textbf{bcEj} es una base de conocimiento (porque usa el mismo tipo de dato) pero que sólo contiene los ejemplos positivos, \textbf{dom} son las constantes del dominio, \textbf{r} es la regla a evaluar y \textbf{ej} es el ejemplo con el que evaluar la regla. Y según la función, se hace una llamada a \emph{buildrule}, que toma como parámetos la regla, las constantes del dominio y el ejemplo. Esta función devuelve una lista de reglas, que representa todas las posibles reglas que se pueden construir realizando la sustitución de las variables de la cabeza por el ejemplo, y asignado a las variables libres todas las posibles combinaciones de las constantes del dominio.
+
+Teniendo una lista de reglas, le aplicamos con un \emph{map} la función \emph{evalRule}, que toma como parámetros la base de conocimiento, la base de conocimiento de los ejemplos, la regla, el dominio, y una regla ya construida. Esta función determina si la regla contruida con unos valores determinados es cierta o no.
+
+Por lo tanto, este trozo nos devolverá una lista de \emph{True} o \emph{False}, representando cada una de las posibles sustituciones es verdadera o no. Por lo tanto, y si necesitamos que al menos haya una sustitución que haga cierta la regla, solo nos queda hacer un \emph{or} de todos los valores de la lista.
+
+Si el resultado es \emph{True}, significa que la regla en cuestión cubre el ejemplo dado. Esto contrasta directamente con la forma de describir este proceso de los lenguajes imperativos, mediante bucles y valores mutables. Haciendo uso de funciones como \emph{map} encapsulamos los procesos recursivos, y generalizamos, dando un significado más abstracto al algoritmo y más cercano a la forma en la que los pensamos, resultando así en un algoritmo descrito con un leguaje de más alto nivel.
+
+\subsection{Predicados recursivos}
+La capacidad de FOIL de descirbir predicados recursivos viene descrita por J. R. Quinlan y R. M. Cameron-Jones en el artículo original, dando además una serie de restricciones para garantizar que no se generen predicados que provoquen recursividad infinita\footnote{Hablaremos más extensamente sobre esta cuestión en el apartado \ref{}}. Esta implementación de FOIL es capaz de describir predicados recursivos, sin embargo, no incluye dichas restricciones, provocando eso que los resultados obtenidos pueden no terminar si fuesen a ejecutarse como código Prolog.
+
+La esencia de la capacidad de generar predicados recursivos reside en la evaluación de las reglas, en la parte del algoritmo que determina si una regla con un ejemplo concreto es cierta o no. Esa parte del algoritmo la realiza la función que hemos visto arriba \emph{evalRule}.
+
+\begin{figure}
+  \begin{lstlisting}[escapechar=\#]
+    #\textbf{evalRule}# :: BC -> BC -> Rule -> [Variable] -> Rule -> Bool
+    #\textbf{evalRule}# _  _    _ _   (R _ []) = True
+    #\textbf{evalRule}# bc bcEj r dom (R h (t:ts))
+      | h `#\textbf{litEq}#` t    = (#\textbf{evalLit}# bcEj t) && (#\textbf{evalRule}# bc bcEj r dom (R h ts))
+      | otherwise     = (#\textbf{evalLit}# bc t)   && (#\textbf{evalRule}# bc bcEj r dom (R h ts))
+  \end{lstlisting}
+  \caption{Implementación de la función \emph{evalRule}, que determina si una regla con un ejemplo ya sustituído es cierta o no.}
+\end{figure}
+
+Podemos ver que la forma de evaluar los literales recursivos es mediante el uso de \emph{bcEj}, comprobando si existe un ejemplo con esos valores. Podemos observar también que la función \emph{evalRule} está definida en función de sí misma.
