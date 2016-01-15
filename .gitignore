@@ -4,3 +4,5 @@ tmux-session
 dist
 *.gen
 *.sh
+*.bbl
+*.blg
